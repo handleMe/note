@@ -1,0 +1,451 @@
+# 权限
+## 基本概念
+### 权限的三类对象
+属主：u user
+属组：g group
+其他人：o others
+所有人：a  all
+
+### 权限的种类
+读：r=4  read
+写：w=2 write
+执行：x=1	execution
+
+### ll属性说明
+```
+[root@localhost home]# ll
+total 0
+drwx------. 5 lyy lyy 107 May  4 06:20 lyy
+```
+
+- drwx------.：类型+属主权限+属组权限+其他人权限
+	- 第一个位置` -`表示普通文件，d表示文件夹，l表示符号链接，b表示块设备文件，c表示字符设备文件
+	- 如果后面有+号，表示有额外的acl权限
+- 链接数：5
+- 属主：lyy
+- 属组：lyy
+- 大小：107
+- 创建时间
+- 文件名
+
+## 授权
+
+### 更改权限 change 
+
+#### 语法
+```
+chmod [-cfvR] [--help] [--version] mode file...
+```
+#### 参数说明
+mode : 权限设定字串，格式如下 :
+```
+[ugoa...][[+-=][rwxX]...][,...]
+```
+其中：
+
+- u 表示该文件的拥有者，g 表示与该文件的拥有者属于同一个群体(group)者，o 表示其他以外的人，a 表示这三者皆是。
+- \+ 表示增加权限、- 表示取消权限、= 表示唯一设定权限。
+- r 表示可读取，w 表示可写入，x 表示可执行，X 表示只有当该文件是个子目录或者该文件已经被设定过为可执行。
+
+其他参数说明：
+
+- -c : 若该文件权限确实已经更改，才显示其更改动作
+- -f : 若该文件权限无法被更改也不要显示错误讯息
+- -v : 显示权限变更的详细资料
+- -R : 对目前目录下的所有文件与子目录进行相同的权限变更(即以递归的方式逐个变更)
+- --help : 显示辅助说明
+- --version : 显示版本
+
+#### 符号模式
+
+使用符号模式可以设置多个项目：who（用户类型），operator（操作符）和 permission（权限），每个项目的设置可以用逗号隔开。 命令 chmod 将修改 who 指定的用户类型对文件的访问权限，用户类型由一个或者多个字母在 who 的位置来说明，如 who 的符号模式表所示:
+
+| who  | 用户类型 | 说明                   |
+| :--- | :------- | :--------------------- |
+| `u`  | user     | 文件所有者             |
+| `g`  | group    | 文件所有者所在组       |
+| `o`  | others   | 所有其他用户           |
+| `a`  | all      | 所用用户, 相当于 *ugo* |
+
+operator 的符号模式表:
+
+| Operator | 说明                                                   |
+| :------- | :----------------------------------------------------- |
+| `+`      | 为指定的用户类型增加权限                               |
+| `-`      | 去除指定用户类型的权限                                 |
+| `=`      | 设置指定用户权限的设置，即将用户类型的所有权限重新设置 |
+
+permission 的符号模式表:
+
+| 模式 | 名字         | 说明                                                         |
+| :--- | :----------- | :----------------------------------------------------------- |
+| `r`  | 读           | 设置为可读权限                                               |
+| `w`  | 写           | 设置为可写权限                                               |
+| `x`  | 执行权限     | 设置为可执行权限                                             |
+| `X`  | 特殊执行权限 | 只有当文件为目录文件，或者其他类型的用户有可执行权限时，才将文件权限设置可执行 |
+| `s`  | setuid/gid   | 当文件被执行时，根据who参数指定的用户类型设置文件的setuid或者setgid权限 |
+| `t`  | 粘贴位       | 设置粘贴位，只有超级用户可以设置该位，只有文件所有者u可以使用该位 |
+#### 八进制语法
+chmod命令可以使用八进制数来指定权限。文件或目录的权限位是由9个权限位来控制，每三位为一组，它们分别是文件所有者（User）的读、写、执行，用户组（Group）的读、写、执行以及其它用户（Other）的读、写、执行。历史上，文件权限被放在一个比特掩码中，掩码中指定的比特位设为1，用来说明一个类具有相应的优先级。
+
+| #    | 权限           | rwx  | 二进制 |
+| :--- | :------------- | :--- | :----- |
+| 7    | 读 + 写 + 执行 | rwx  | 111    |
+| 6    | 读 + 写        | rw-  | 110    |
+| 5    | 读 + 执行      | r-x  | 101    |
+| 4    | 只读           | r--  | 100    |
+| 3    | 写 + 执行      | -wx  | 011    |
+| 2    | 只写           | -w-  | 010    |
+| 1    | 只执行         | --x  | 001    |
+| 0    | 无             | ---  | 000    |
+
+例如， 765 将这样解释：
+
+- 所有者的权限用数字表达：属主的那三个权限位的数字加起来的总和。如 rwx ，也就是 4+2+1 ，应该是 7。
+- 用户组的权限用数字表达：属组的那个权限位数字的相加的总和。如 rw- ，也就是 4+2+0 ，应该是 6。
+- 其它用户的权限数字表达：其它用户权限位的数字相加的总和。如 r-x ，也就是 4+0+1 ，应该是 5。
+
+#### 实例
+将文件 file1.txt 设为所有人皆可读取 :
+```
+chmod ugo+r file1.txt
+```
+将文件 file1.txt 设为所有人皆可读取 :
+```
+chmod a+r file1.txt
+```
+将文件 file1.txt 与 file2.txt 设为该文件拥有者，与其所属同一个群体者可写入，但其他以外的人则不可写入 :
+```
+chmod ug+w,o-w file1.txt file2.txt
+```
+为 ex1.py 文件拥有者增加可执行权限:
+```
+chmod u+x ex1.py
+```
+将目前目录下的所有文件与子目录皆设为任何人可读取 :
+```
+chmod -R a+r *
+```
+此外chmod也可以用数字来表示权限如 :
+```
+chmod 777 file
+```
+语法为：
+```
+chmod abc file
+```
+
+- 若要 rwx 属性则 4+2+1=7；
+- 若要 rw- 属性则 4+2=6；
+- 若要 r-x 属性则 4+1=5。
+```
+chmod a=rwx file
+```
+和
+```
+chmod 777 file
+```
+效果相同
+```
+chmod ug=rwx,o=x file
+```
+和
+```
+chmod 771 file
+```
+效果相同
+若用 **chmod 4755 filename** 可使此程序具有 root 的权限。
+#### 更多说明
+| `命令`                                     | 说明                                                         |
+| :----------------------------------------- | :----------------------------------------------------------- |
+| `chmod a+r *file*`                         | 给file的所有用户增加读权限                                   |
+| `chmod a-x *file*`                         | 删除file的所有用户的执行权限                                 |
+| `chmod a+rw *file*`                        | 给file的所有用户增加读写权限                                 |
+| `chmod +rwx *file*`                        | 给file的所有用户增加读写执行权限                             |
+| `chmod u=rw,go= *file*`                    | 对file的所有者设置读写权限，清空该用户组和其他用户对file的所有权限（空格代表无权限） |
+| `chmod -R u+r,go-r *docs*`                 | 对目录docs和其子目录层次结构中的所有文件给用户增加读权限，而对用户组和其他用户删除读权限 |
+| `chmod 664 *file*`                         | 对file的所有者和用户组设置读写权限, 为其其他用户设置读权限   |
+| `chmod 0755 *file*`                        | 相当于`u=rwx (4+2+1),go=rx (4+1 & 4+1)`。`0` 没有特殊模式。  |
+| `chmod 4755 *file*`                        | `4`设置了设置[用户ID](https://www.runoob.com/wiki/用户ID)位，剩下的相当于 u=rwx (4+2+1),go=rx (4+1 & 4+1)。 |
+| `find path/ -type d -exec chmod a-x {} \;` | 删除可执行权限对path/以及其所有的目录（不包括文件）的所有用户，使用'-type f'匹配文件 |
+| `find path/ -type d -exec chmod a+x {} \;` | 允许所有用户浏览或通过目录path/                              |
+
+## 修改文件属性
+### 修改文件属主和属组 chown
+```
+chown [-cfhvR] [--help] [--version] user[:group] file...
+```
+**参数** :
+
+- user : 新的文件拥有者的使用者 ID
+- group : 新的文件拥有者的使用者组(group)
+- -c : 显示更改的部分的信息
+- -f : 忽略错误信息
+- -h :修复符号链接
+- -v : 显示详细的处理信息
+- -R : 处理指定目录以及其子目录下的所有文件
+- --help : 显示辅助说明
+- --version : 显示版本
+#### 实例
+把 /var/run/httpd.pid 的所有者设置 root：
+```
+chown root /var/run/httpd.pid
+```
+将文件 file1.txt 的拥有者设为 runoob，群体的使用者 runoobgroup :
+```
+chown runoob:runoobgroup file1.txt
+```
+将当前前目录下的所有文件与子目录的拥有者皆设为 runoob，群体的使用者 runoobgroup:
+```
+chown -R runoob:runoobgroup *
+```
+把 /home/runoob 的关联组设置为 512 （关联组ID），不改变所有者：
+```
+chown :512 /home/runoob
+```
+### 只修改属组
+
+##### 语法
+```
+chgrp [-cfhRv][--help][--version][所属群组][文件或目录...] 或 chgrp [-cfhRv][--help][--reference=<参考文件或目录>][--version][文件或目录...]
+```
+##### 参数说明
+　　`-c或--changes 效果类似"-v"参数，但仅回报更改的部分。`
+
+　　`-f或--quiet或--silent 　不显示错误信息。`
+
+　　`-h或--no-dereference 　只对符号连接的文件作修改，而不更动其他任何相关文件。`
+
+　　`-R或--recursive 　递归处理，将指定目录下的所有文件及子目录一并处理。`
+
+　　`-v或--verbose 　显示指令执行过程。`
+
+　　`--help 　在线帮助。`
+
+　　`--reference=<参考文件或目录> 　把指定文件或目录的所属群组全部设成和参考文件或目录的所属群组相同。`
+
+　　`--version 　显示版本信息。`
+
+##### 实例
+实例1：改变文件的群组属性：
+```
+chgrp -v bin log2012.log
+```
+输出：
+```
+[root@localhost test]# ll
+---xrw-r-- 1 root root 302108 11-13 06:03 log2012.log
+[root@localhost test]# chgrp -v bin log2012.log
+```
+"log2012.log" 的所属组已更改为 bin
+```
+[root@localhost test]# ll
+---xrw-r-- 1 root bin  302108 11-13 06:03 log2012.log
+```
+## ACL access control list 访问控制列表
+**acl权限级别高于基础权限**
+ACL是UGO的补充和加强
+#### setfacl
+授予的acl权限，ll查看显示的权限会显示一个+，表示有额外的权限设置，ll查看的基本权限会叠加显示acl的设置，具体拥有的权限需要使用getfacl查看，
+命令：
+setfacl 参数 u/g:目标:权限 文件或目录
+参数列表：
+  ``-m, --modify=acl        modify the current ACL(s) of file(s)`
+  `-M, --modify-file=file  read ACL entries to modify from file`
+  `-x, --remove=acl        remove entries from the ACL(s) of file(s)`
+  `-X, --remove-file=file  read ACL entries to remove from file`
+  `-b, --remove-all        remove all extended ACL entries`
+  `-k, --remove-default    remove the default ACL`
+  `--set=acl           set the ACL of file(s), replacing the current ACL`
+  `--set-file=file     read ACL entries to set from file`
+  `--mask              do recalculate the effective rights mask`
+  `-n, --no-mask           don't recalculate the effective rights mask`
+  `-d, --default           operations apply to the default ACL`
+  `-R, --recursive         recurse into subdirectories`
+  `-L, --logical           logical walk, follow symbolic links`
+  `-P, --physical          physical walk, do not follow symbolic links`
+  `--restore=file      restore ACLs (inverse of `getfacl -R')`
+  `--test              test mode (ACLs are not modified)`
+  `-v, --version           print version and exit`
+  `-h, --help              this help text`
+##### 实例
+###### **setfacl -m：给用户或群组添加 ACL 权限**
+给用户st授予文件rx的权限
+`[root@localhost ~]# setfacl -m u:st:rx /project`
+
+给组st授予权限
+`setfacl -m g:st:rx /project`
+
+给其他人授予权限
+`setfacl -m o::rx /project`
+###### **setfacl -d：设定默认 ACL 权限**
+
+**给 project 文件设定 st 用户访问 rx 的默认 ACL 权限，可执行如下指令：**
+```
+[root@localhost /]# setfacl -m d:u:st:rx project
+[root@localhost project]# getfacl project
+\# file: project
+\# owner: root
+\# group: tgroup
+user:: rwx
+user:st:r-x
+group::rwx
+group:tgroup2:rwx
+mask::rwx
+other::---
+default:user::rwx <--多出了default字段
+default:user:st:r-x
+default:group::rwx
+default:mask::rwx
+default:other::---
+[root@localhost /]# cd project
+[root@localhost project]# touch bcd
+[root@localhost project]# mkdir d2
+\#新建子文件和子目录
+[root@localhost project]# ll 总用量8
+-rw-r--r-- 1 root root 01月19 05:20 abc
+-rw-rw----+ 1 root root 01月19 05:33 bcd
+drwxr-xr-x 2 root root 4096 1月19 05:20 d1
+drwxrwx---+ 2 root root 4096 1月19 05:33 d2
+\#新建的bcd和d2已经继承了父目录的ACL权限
+```
+原先的 abc 和 d1 还是没有 ACL 权限，因为默认 ACL 权限是针对新建立的文件生效的。
+对目录设定的默认 ACL 权限，可直接使用 setfacl -k 命令删除。例如：
+`[root@localhost /]# setfacl -k project`
+
+###### setfacl -R：设定递归 ACL 权限
+
+递归 ACL 权限指的是父目录在设定 ACL 权限时，所有的子文件和子目录也会拥有相同的 ACL 权限。
+
+例如，给 project 目录设定 st 用户访问权限为 rx 的递归 ACL 权限，执行命令如下：
+```
+[root@localhost project]# setfacl -m u:st:rx -R project
+[root@localhost project]# ll
+总用量 8
+-rw-r-xr--+ 1 root root 01月19 05:20 abc
+-rw-rwx--+ 1 root root 01月19 05:33 bcd
+drwxr-xr-x+ 2 root root 4096 1月19 05:20 d1
+drwxrwx---+ 2 root root 4096 1月19 05:33 d2
+\#abc和d1也拥有了ACL权限
+```
+注意，默认 ACL 权限指的是针对父目录中后续建立的文件和目录会继承父目录的 ACL 权限；递归 ACL 权限指的是针对父目录中已经存在的所有子文件和子目录会继承父目录的 ACL 权限。
+###### setfacl -x：删除指定的 ACL 权限
+使用 setfacl -x 命令，可以删除指定的 ACL 权限，例如，删除前面建立的 st 用户对 project 目录的 ACL 权限，执行命令如下：
+```
+[root@localhost /]# setfacl -x u:st project
+#删除指定用户和用户组的ACL权限
+[root@localhost /]# getfacl project
+# file:project
+# owner: root
+# group: tgroup
+user::rwx
+group::rwx
+group:tgroup2:rwx
+mask::rwx
+other::---
+#st用户的权限已被删除
+```
+###### setfacl -b：删除指定文件的所有 ACL 权限
+此命令可删除所有与指定文件或目录相关的 ACL 权限。例如，现在我们删除一切与 project 目录相关的 ACL 权限，执行命令如下：
+```
+[root@localhost /]# setfacl -b project
+#会删除文件的所有ACL权限
+[root@localhost /]# getfacl project
+#file: project
+#owner: root
+# group: tgroup
+user::rwx
+group::rwx
+other::---
+#所有ACL权限已被删除
+```
+#### getfacl
+getfacl 文件/目录
+查看所有权限
+
+## 特殊权限
+
+### 特殊位 suid sgid sticky
+#### suid Secure user identity
+
+suid是针对文件设置的一个特殊的权限，使调用文件的用户临时获得属主的能力
+chmod u+s /...
+```
+[root@localhost test]# chmod u+s test.txt 
+[root@localhost test]# ll
+总用量 4
+-rwsr-xr-x. 1 root root 81 4月  19 03:35 test.txt
+[root@localhost test]# 
+```
+**如果原来拥有x权限，赋予suid，ll查看时显示S，没有x，赋予suid，查看时显示s**
+#### sgid 
+
+### 文件属性 chattr设置文件属性 lasttr查看文件属性
+
+Linux chattr命令用于改变文件属性。
+
+这项指令可改变存放在ext2文件系统上的文件或目录属性，这些属性共有以下8种模式：
+
+1. a：让文件或目录仅供附加用途。**文件只能追加内容**
+2. A：不允许更新文件的访问时间
+2. b：不更新文件或目录的最后存取时间。
+3. c：将文件或目录压缩后存放。启用属性，文件自动压缩
+4. d：将文件或目录排除在倾倒操作之外。 
+5. i：不得任意更动文件或目录。
+6. s：保密性删除文件或目录。
+7. S：即时更新文件或目录。
+8. u：预防意外删除。
+#### 语法
+```
+chattr [-RV][-v<版本编号>][+/-/=<属性>][文件或目录...]
+```
+
+#### 参数
+　　-R 递归处理，将指定目录下的所有文件及子目录一并处理。
+
+　　-v<版本编号> 设置文件或目录版本。
+
+　　-V 显示指令执行过程。
+
+　　+<属性> 开启文件或目录的该项属性。
+
+　　-<属性> 关闭文件或目录的该项属性。
+
+　　=<属性> 指定文件或目录的该项属性。
+#### 实例
+用chattr命令防止系统中某个关键文件被修改：
+```
+chattr +i /etc/resolv.conf
+lsattr /etc/resolv.conf
+```
+会显示如下属性
+```
+----i-------- /etc/resolv.conf
+```
+让某个文件只能往里面追加数据，但不能删除，适用于各种日志文件：
+```
+chattr +a /var/log/messages
+```
+
+### 进程掩码 umask
+umask命令指定在建立文件时预设的权限掩码。
+umask可用来设定[权限掩码]。[权限掩码]是由4个八进制的数字所组成，将现有的存取权限减掉权限掩码后，即可产生建立文件时预设的权限
+**创建文件的时候，默认的权限时使用`0777-进程掩码`，来设定默认权限**
+#### 查看进程掩码
+```
+@localhost test]# umask
+0022
+```
+#### 设置进程掩码
+```
+[root@localhost test]# umask 0022
+```
+**
+如果设置umask为0000，创建文件的时候系统会设置文件权限为0666，系统默认减去了0111；
+这是因为系统限制不能直接授予执行权限
+文件夹则没有这个限制
+umask设置为0777，则创建的新文件或者文件夹没有任何权限
+**
+
+### watch -n1 'll /usr/local/testmod'每一秒执行这个命令
+
